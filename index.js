@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -34,20 +34,33 @@ async function run() {
     try {
         await client.connect();
 
-        const db =client.db('freelance_db')
-        const jobsCollection=db.collection('jobs')
+        const db = client.db('freelance_db')
+        const jobsCollection = db.collection('jobs')
 
-        app.post('/jobs',async(req,res)=>{
-            const newJob =req.body;
-            const result =await jobsCollection.insertOne(newJob)
+        app.post('/jobs', async (req, res) => {
+            const newJob = req.body;
+            const result = await jobsCollection.insertOne(newJob)
+            res.send(result)
+        })
+        // latest job 
+        app.get('/latest-jobs', async (req, res) => {
+            const cursor = jobsCollection.find().sort({ _id: -1 }).limit(6)
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+        app.get('/allJobs', async (req, res) => {
+            const cursor = jobsCollection.find().sort({ _id: -1 })
+            const result = await cursor.toArray();
             res.send(result)
         })
 
-        app.get('/latest-jobs',async (req,res)=>{
-            const cursor =jobsCollection.find().sort({_id:-1}).limit(6)
-            const result =await cursor.toArray();
-            res.send(result)
-        })
+        app.get("/allJobs/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await jobsCollection.findOne(query);
+            res.send(result);
+        });
+
 
 
         await client.db("admin").command({ ping: 1 });
