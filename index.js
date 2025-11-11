@@ -36,10 +36,18 @@ async function run() {
 
         const db = client.db('freelance_db')
         const jobsCollection = db.collection('jobs')
+        const acceptedCollection = db.collection('accepted_jobs')
 
         app.post('/jobs', async (req, res) => {
             const newJob = req.body;
             const result = await jobsCollection.insertOne(newJob)
+            res.send(result)
+        })
+
+        // Accept a job
+        app.post('/accepted-jobs', async (req, res) => {
+            const acceptedJob = req.body;
+            const result = await acceptedCollection.insertOne(acceptedJob);
             res.send(result)
         })
         // latest job 
@@ -58,6 +66,13 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await jobsCollection.findOne(query);
+            res.send(result);
+        });
+
+        //get all accepted jobs
+        app.get('/accepted-jobs', async (req, res) => {
+            const cursor = acceptedCollection.find().sort({ _id: -1 });
+            const result = await cursor.toArray();
             res.send(result);
         });
 
