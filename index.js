@@ -44,6 +44,13 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/jobs', async (req, res) => {
+            const job = req.body;
+            job.postedDate = new Date();
+            const result = await jobsCollection.insertOne(job);
+            res.send(result);
+        });
+
         // Accept a job
         app.post('/accepted-jobs', async (req, res) => {
             const acceptedJob = req.body;
@@ -75,6 +82,15 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
+
+        //  Delete accepted job by ID
+        app.delete('/accepted-jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await acceptedCollection.deleteOne(query)
+            res.send(result)
+
+        })
 
 
 
