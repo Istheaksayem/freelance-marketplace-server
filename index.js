@@ -51,6 +51,17 @@ async function run() {
             res.send(result);
         });
 
+        // My added Job
+        app.get('/myAddedJobs',async(req,res) =>{
+            const email =req.query.email;
+            if(!email){
+                return res.status(400).send({message:'Email is required'})
+            }
+            const query={userEmail:email}
+            const result =await jobsCollection.find(query).sort({_id:-1}).toArray()
+            res.send(result)
+        })
+
         // Accept a job
         app.post('/accepted-jobs', async (req, res) => {
             const acceptedJob = req.body;
