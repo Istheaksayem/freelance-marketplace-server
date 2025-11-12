@@ -1,10 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 3000;
-
-
 
 
 
@@ -13,7 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 
-const uri = "mongodb+srv://freelancedbUser:WxkW3r7Fx1yU77KF@cluster0.ba90y0b.mongodb.net/?appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ba90y0b.mongodb.net/?appName=Cluster0`;
+// const uri = "mongodb+srv://freelancedbUser:WxkW3r7Fx1yU77KF@cluster0.ba90y0b.mongodb.net/?appName=Cluster0";
 
 // WxkW3r7Fx1yU77KF
 // freelancedbUser
@@ -51,6 +51,26 @@ async function run() {
             res.send(result);
         });
 
+        //  Update Job by ID
+        app.patch('/jobs/:id',async (req,res)=>{
+          const id =req.params.id;
+          const updateJob =req.body;
+          
+          const filter ={_id: new ObjectId(id)};
+          
+          const updateDoc ={
+            $set:{
+                title:updateJob.title,
+                category:updateJob.category,
+                summary:updateJob.summary,
+                coverImage:updateJob.coverImage,
+            },
+          }
+
+          const result =await jobsCollection.updateOne(filter,updateDoc);
+          res.send(result)
+          
+        })
         // My added Job
         app.get('/myAddedJobs',async(req,res) =>{
             const email =req.query.email;
@@ -105,7 +125,7 @@ async function run() {
 
 
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     }
