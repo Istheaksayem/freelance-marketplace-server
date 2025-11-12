@@ -13,10 +13,8 @@ app.use(express.json());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ba90y0b.mongodb.net/?appName=Cluster0`;
-// const uri = "mongodb+srv://freelancedbUser:WxkW3r7Fx1yU77KF@cluster0.ba90y0b.mongodb.net/?appName=Cluster0";
 
-// WxkW3r7Fx1yU77KF
-// freelancedbUser
+
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -38,11 +36,6 @@ async function run() {
         const jobsCollection = db.collection('jobs')
         const acceptedCollection = db.collection('accepted_jobs')
 
-        app.post('/jobs', async (req, res) => {
-            const newJob = req.body;
-            const result = await jobsCollection.insertOne(newJob)
-            res.send(result)
-        })
 
         app.post('/jobs', async (req, res) => {
             const job = req.body;
@@ -50,35 +43,42 @@ async function run() {
             const result = await jobsCollection.insertOne(job);
             res.send(result);
         });
+            // All Jobs (with sorting option)
+        app.get('/allJobs', async (req, res) => {
+            const sortOrder = req.query.sort === 'asc' ? 1 : -1; 
+            const cursor = jobsCollection.find().sort({ postedDate: sortOrder });
+            const result = await cursor.toArray();
+            res.send(result);
+        });
 
         //  Update Job by ID
-        app.patch('/jobs/:id',async (req,res)=>{
-          const id =req.params.id;
-          const updateJob =req.body;
-          
-          const filter ={_id: new ObjectId(id)};
-          
-          const updateDoc ={
-            $set:{
-                title:updateJob.title,
-                category:updateJob.category,
-                summary:updateJob.summary,
-                coverImage:updateJob.coverImage,
-            },
-          }
+        app.patch('/jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateJob = req.body;
 
-          const result =await jobsCollection.updateOne(filter,updateDoc);
-          res.send(result)
-          
+            const filter = { _id: new ObjectId(id) };
+
+            const updateDoc = {
+                $set: {
+                    title: updateJob.title,
+                    category: updateJob.category,
+                    summary: updateJob.summary,
+                    coverImage: updateJob.coverImage,
+                },
+            }
+
+            const result = await jobsCollection.updateOne(filter, updateDoc);
+            res.send(result)
+
         })
         // My added Job
-        app.get('/myAddedJobs',async(req,res) =>{
-            const email =req.query.email;
-            if(!email){
-                return res.status(400).send({message:'Email is required'})
+        app.get('/myAddedJobs', async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                return res.status(400).send({ message: 'Email is required' })
             }
-            const query={userEmail:email}
-            const result =await jobsCollection.find(query).sort({_id:-1}).toArray()
+            const query = { userEmail: email }
+            const result = await jobsCollection.find(query).sort({ _id: -1 }).toArray()
             res.send(result)
         })
 
